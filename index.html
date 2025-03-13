@@ -12,15 +12,17 @@
     <script src="main.js" defer></script>
   </head>
   <body>
+    <!-- Contenedor del minijuego (Kaboom.js) con barra de progreso de Unity -->
+    <div id="kaboom-container" style="display: block; width: 960px; height: 600px; position: relative;">
+      <!-- Barra de progreso de Unity -->
+      <div id="unity-loading-bar" style="position: absolute; top: 10px; left: 10px; width: 940px; height: 20px; background: #ccc; border-radius: 5px; overflow: hidden;">
+        <div id="unity-progress-bar-full" style="width: 0%; height: 100%; background: #4caf50;"></div>
+      </div>
+    </div>
+
     <!-- Contenedor del juego principal (Unity WebGL) -->
     <div id="unity-container" class="unity-desktop" style="display: none;">
       <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
       <div id="unity-warning"></div>
       <div id="unity-footer">
         <div id="unity-logo-title-footer"></div>
@@ -28,9 +30,6 @@
         <div id="unity-build-title">YetSRP</div>
       </div>
     </div>
-
-    <!-- Contenedor del minijuego (Kaboom.js) -->
-    <div id="kaboom-container" style="display: block; width: 960px; height: 600px;"></div>
 
     <script>
       // Configuración del juego Unity WebGL
@@ -84,18 +83,17 @@
         canvas.style.height = "600px";
       }
 
-      document.querySelector("#unity-loading-bar").style.display = "block";
-
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
+          // Actualizar la barra de progreso dentro del minijuego
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
         }).then((unityInstance) => {
           // Ocultar el minijuego y mostrar el juego principal
           document.querySelector("#kaboom-container").style.display = "none";
           document.querySelector("#unity-container").style.display = "block";
-          document.querySelector("#unity-loading-bar").style.display = "none";
+          document.querySelector("#unity-loading-bar").style.display = "none"; // Ocultar barra de progreso
           document.querySelector("#unity-fullscreen-button").onclick = () => {
             unityInstance.SetFullscreen(1);
           };
