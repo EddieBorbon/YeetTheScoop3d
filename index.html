@@ -6,102 +6,75 @@
     <title>Unity Web Player | YetSRP</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
-    <!-- Incluir Kaboom.js -->
     <script src="https://unpkg.com/kaboom/dist/kaboom.min.js"></script>
-    <!-- Incluir el minijuego -->
     <script src="main.js" defer></script>
+    <style>
+      body { text-align: center; font-family: Arial, sans-serif; background: #f4f4f4; }
+      #kaboom-container, #unity-container { margin: auto; transition: opacity 0.5s ease-in-out; }
+      #unity-loading-bar { width: 80%; height: 20px; background: #ccc; border-radius: 5px; overflow: hidden; margin: 10px auto; }
+      #unity-progress-bar-full { width: 0%; height: 100%; background: #4caf50; }
+      .hidden { opacity: 0; pointer-events: none; }
+    </style>
   </head>
   <body>
-    <!-- Contenedor del minijuego (Kaboom.js) con barra de progreso de Unity -->
-    <div id="kaboom-container" style="display: block; width: 960px; height: 600px; position: relative;">
-      <!-- Barra de progreso de Unity -->
-      <div id="unity-loading-bar" style="position: absolute; top: 10px; left: 10px; width: 940px; height: 20px; background: #ccc; border-radius: 5px; overflow: hidden;">
-        <div id="unity-progress-bar-full" style="width: 0%; height: 100%; background: #4caf50;"></div>
+    <div id="kaboom-container" style="width: 960px; height: 600px; position: relative;">
+      <div id="unity-loading-bar">
+        <div id="unity-progress-bar-full"></div>
       </div>
     </div>
-
-    <!-- Contenedor del juego principal (Unity WebGL) -->
-    <div id="unity-container" class="unity-desktop" style="display: none;">
+    
+    <div id="unity-container" class="unity-desktop hidden">
       <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
       <div id="unity-warning"></div>
       <div id="unity-footer">
         <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
+        <button id="unity-fullscreen-button">Fullscreen</button>
         <div id="unity-build-title">YetSRP</div>
       </div>
     </div>
 
     <script>
-      // Configuración del juego Unity WebGL
-      var canvas = document.querySelector("#unity-canvas");
-
-      // Función para mostrar mensajes temporales o permanentes
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
+        warningBanner.innerHTML = msg;
+        warningBanner.style.background = type === 'error' ? 'red' : 'yellow';
+        warningBanner.style.padding = '10px';
+        setTimeout(() => warningBanner.innerHTML = '', 5000);
       }
-
+      
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/testIOS.loader.js";
       var config = {
-        arguments: [],
         dataUrl: buildUrl + "/testIOS.data",
         frameworkUrl: buildUrl + "/testIOS.framework.js",
         codeUrl: buildUrl + "/testIOS.wasm",
-        streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "YetSRP",
         productVersion: "0.1.0",
         showBanner: unityShowBanner,
       };
-
+      
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Estilo para dispositivos móviles
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
-      } else {
-        // Estilo para escritorio
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
+        document.querySelector("#unity-container").classList.add("unity-mobile");
       }
-
+      
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          // Actualizar la barra de progreso dentro del minijuego
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+        createUnityInstance(document.querySelector("#unity-canvas"), config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width = (progress * 100) + "%";
         }).then((unityInstance) => {
-          // Ocultar el minijuego y mostrar el juego principal
-          document.querySelector("#kaboom-container").style.display = "none";
-          document.querySelector("#unity-container").style.display = "block";
-          document.querySelector("#unity-loading-bar").style.display = "none"; // Ocultar barra de progreso
+          document.querySelector("#kaboom-container").classList.add("hidden");
+          setTimeout(() => {
+            document.querySelector("#unity-container").classList.remove("hidden");
+          }, 500);
           document.querySelector("#unity-fullscreen-button").onclick = () => {
             unityInstance.SetFullscreen(1);
           };
         }).catch((message) => {
-          alert(message);
+          unityShowBanner("Error: " + message, 'error');
         });
       };
-
       document.body.appendChild(script);
     </script>
   </body>
