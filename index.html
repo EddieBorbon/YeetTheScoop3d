@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="TemplateData/style.css">
     <!-- Incluir Kaboom.js -->
     <script src="https://unpkg.com/kaboom/dist/kaboom.min.js"></script>
+    <!-- Incluir el minijuego -->
+    <script src="main.js" defer></script>
   </head>
   <body>
     <!-- Contenedor del juego principal (Unity WebGL) -->
@@ -31,116 +33,6 @@
     <div id="kaboom-container" style="display: block; width: 960px; height: 600px;"></div>
 
     <script>
-      // Minijuego con Kaboom.js
-      kaboom({
-        root: document.querySelector("#kaboom-container"),
-        width: 960,
-        height: 600,
-        background: [135, 206, 235], // Color de fondo azul claro
-      });
-
-      // Variables globales para el análisis de audio
-      let isMicrophoneAccessGranted = false;
-      let audioContext, analyser, microphoneStream;
-
-      // Función para inicializar el acceso al micrófono
-      async function initMicrophone() {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          microphoneStream = audioContext.createMediaStreamSource(stream);
-          analyser = audioContext.createAnalyser();
-          microphoneStream.connect(analyser);
-
-          analyser.fftSize = 256;
-          const bufferLength = analyser.frequencyBinCount;
-          const dataArray = new Uint8Array(bufferLength);
-
-          isMicrophoneAccessGranted = true;
-
-          // Analizar el volumen en tiempo real
-          onUpdate(() => {
-            analyser.getByteFrequencyData(dataArray);
-            const volume = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
-
-            // Si el volumen supera un umbral, hacer saltar al jugador
-            if (volume > 50 && player.grounded()) {
-              player.jump();
-            }
-          });
-        } catch (err) {
-          console.error("Error al acceder al micrófono:", err);
-          alert("No se pudo acceder al micrófono. Asegúrate de otorgar permisos.");
-        }
-      }
-
-      // Escena del minijuego
-      scene("minigame", () => {
-        // Variables del juego
-        let score = 0;
-        const playerSpeed = 200;
-        const obstacleSpeed = 300;
-
-        // Añadir jugador (cuadrado rojo)
-        const player = add([
-          rect(40, 40), // Tamaño del jugador (ancho x alto)
-          pos(100, 400), // Posición inicial
-          color(255, 0, 0), // Color rojo
-          area(),
-          body(),
-        ]);
-
-        // Añadir suelo (rectángulo verde)
-        add([
-          rect(width(), 50), // Tamaño del suelo
-          pos(0, height() - 50), // Posición en la parte inferior
-          color(0, 128, 0), // Color verde
-          area(),
-          solid(),
-        ]);
-
-        // Función para generar obstáculos (cuadrados negros)
-        function spawnObstacle() {
-          add([
-            rect(40, 40), // Tamaño del obstáculo
-            pos(width(), height() - 100), // Posición inicial
-            color(0, 0, 0), // Color negro
-            area(),
-            move(LEFT, obstacleSpeed), // Mover hacia la izquierda
-            "obstacle", // Etiqueta para detectar colisiones
-          ]);
-        }
-
-        // Generar obstáculos cada 2 segundos
-        loop(2, spawnObstacle);
-
-        // Manejar colisiones
-        player.onCollide("obstacle", () => {
-          go("game-over");
-        });
-
-        // Actualizar puntaje
-        onUpdate(() => {
-          score += 0.1;
-          debug.text(`Score: ${Math.floor(score)}`);
-        });
-
-        // Inicializar el micrófono
-        initMicrophone();
-      });
-
-      // Escena de Game Over
-      scene("game-over", () => {
-        add([
-          text("Game Over", { size: 48 }), // Texto de Game Over
-          pos(center()), // Centrar en la pantalla
-          origin("center"), // Alinear al centro
-        ]);
-      });
-
-      // Iniciar el minijuego
-      go("minigame");
-
       // Configuración del juego Unity WebGL
       var canvas = document.querySelector("#unity-canvas");
 
