@@ -11,8 +11,9 @@
     <style>
       body { text-align: center; font-family: Arial, sans-serif; background: #f4f4f4; }
       #kaboom-container, #unity-container { margin: auto; transition: opacity 0.5s ease-in-out; }
-      #unity-loading-bar { width: 80%; height: 20px; background: #ccc; border-radius: 5px; overflow: hidden; margin: 10px auto; }
+      #unity-loading-bar { width: 80%; height: 20px; background: #ccc; border-radius: 5px; overflow: hidden; margin: 10px auto; position: relative; }
       #unity-progress-bar-full { width: 0%; height: 100%; background: #4caf50; }
+      #unity-progress-text { position: absolute; width: 100%; top: 0; left: 0; text-align: center; font-weight: bold; line-height: 20px; }
       .hidden { opacity: 0; pointer-events: none; }
     </style>
   </head>
@@ -20,6 +21,7 @@
     <div id="kaboom-container" style="width: 960px; height: 600px; position: relative;">
       <div id="unity-loading-bar">
         <div id="unity-progress-bar-full"></div>
+        <div id="unity-progress-text">0%</div>
       </div>
     </div>
     
@@ -62,7 +64,9 @@
       script.src = loaderUrl;
       script.onload = () => {
         createUnityInstance(document.querySelector("#unity-canvas"), config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = (progress * 100) + "%";
+          let progressPercentage = Math.round(progress * 100) + "%";
+          document.querySelector("#unity-progress-bar-full").style.width = progressPercentage;
+          document.querySelector("#unity-progress-text").innerText = progressPercentage;
         }).then((unityInstance) => {
           document.querySelector("#kaboom-container").classList.add("hidden");
           setTimeout(() => {
